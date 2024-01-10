@@ -48,8 +48,8 @@ defmodule GcCommunityWeb.Router do
 
   scope "/", GcCommunityWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
-    # moved from default
-    get "/", PageController, :home
+
+    get "/", PageController, :home # moved from default line 41
     live_session :redirect_if_user_is_authenticated,
       on_mount: [{GcCommunityWeb.UserAuth, :redirect_if_user_is_authenticated}] do
       live "/users/register", UserRegistrationLive, :new
@@ -66,6 +66,7 @@ defmodule GcCommunityWeb.Router do
 
     live_session :require_authenticated_user,
       on_mount: [{GcCommunityWeb.UserAuth, :ensure_authenticated}] do
+      live "/home", HomeLive, :index # go to home if logged in
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
     end
