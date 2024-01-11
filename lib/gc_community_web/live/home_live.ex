@@ -1,6 +1,7 @@
 defmodule GcCommunityWeb.HomeLive do
   use GcCommunityWeb, :live_view
 
+  alias GcCommunity.Posts
   alias GcCommunity.Posts.Post
 
   @impl true
@@ -29,7 +30,7 @@ defmodule GcCommunityWeb.HomeLive do
     socket =
       socket
       |> assign(form: form)
-      |> allow_upload(:image, accept: ~w(.png .jpg .jpeg), max_entries: 1)
+      |> allow_upload(:image, accept: ~w(.png .jpg .gif .jpeg), max_entries: 1)
     {:ok, socket}
   end
 
@@ -38,7 +39,32 @@ defmodule GcCommunityWeb.HomeLive do
     {:noreply, socket}
   end
 
-  def handle_event("save-post", _params, socket) do
-    {:noreply, socket}
+  def handle_event("save-post", %{"post" => post_params}, socket) do
+    %{current_user: user} = socket.assigns
+
+    post_params
+    |> Map.put("user_id", user.id)
+    |> Map.put("image_path", List.first(consume_files(socket)))
+    |> Posts.save()
+    |> case do
+      {:ok, _post} ->
+        socket =
+          socket
+          |> put_flash(:info, "Post created successfully")
+          |> push_navigate(to: ~p"/home")
+        {:noreply, socket}
+      {:error, _changeset} ->
+        {:noreply, socket}
+
+    end
+  end
+
+  defp consume_files(socket) do
+    consume_uploaded_entries(socket, :image, fn %{path: path}, _entry ->
+      dest = Path.join([:code.priv_dir(:gc_community), "static", "uploads", Path.basename(path)])
+      File.cp!(path, dest)
+
+      {:postpone, ~p"/uploads/#{Path.basename(dest)}"}
+    end)
   end
 end
