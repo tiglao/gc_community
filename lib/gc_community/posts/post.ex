@@ -15,8 +15,7 @@ defmodule GcCommunity.Posts.Post do
   @doc false
   def changeset(post, attrs) do
     post
-    |> cast(attrs, [:caption, :image_path])
-    |> validate_required([:caption, :image_path])
-    |> cast_assoc(:user)
+    |> cast(attrs, [:caption, :image_path, :user_id])
+    |> validate_required([:caption, :image_path, :user_id])
   end
 end
